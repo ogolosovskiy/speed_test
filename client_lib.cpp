@@ -41,7 +41,7 @@ int client_lib::run_test(char const* server) {
 
 	int sock;
 	if ((sock = socket(PF_INET, SOCK_DGRAM, 0)) < 0) {
-		print_log("could not create socket\n");
+		print_log("could not create socket");
 		return -1;
 	}
 
@@ -60,7 +60,7 @@ int client_lib::run_test(char const* server) {
 
 	// measure RTT without load and clock desync
 	{
-		print_log("\nmeasure RTT (without load) and clock desync\n");
+		print_log("Measuring RTT (without load) and clock desync ...");
 		packet out;
 		out._type = ETimeSync;
 		int rtt[RTT_MAX_ATTEMPTS];
@@ -71,7 +71,7 @@ int client_lib::run_test(char const* server) {
 
 		for (int attempt = 0; attempt < RTT_MAX_ATTEMPTS; ++attempt) {
 
-			print_log(".");
+			//print_log(".");
 			std::chrono::time_point<std::chrono::system_clock> now;
 			now = std::chrono::system_clock::now();
 			time_sync_payload* payload = reinterpret_cast<time_sync_payload*>(&out._payload[0]);
@@ -89,16 +89,16 @@ int client_lib::run_test(char const* server) {
 					now = std::chrono::system_clock::now();
 					long err_time = std::chrono::duration_cast<std::chrono::milliseconds>(
 							now.time_since_epoch()).count();
-					print_log("\ntime out %s %d\n", strerror(err), (int) (err_time - payload->_client_time_stamp));
+					print_log("\ntime out %s %d", strerror(err), (int) (err_time - payload->_client_time_stamp));
 					continue;
 				}
-				print_log("\ncould not read from socket %s\n", strerror(err));
+				print_log("\ncould not read from socket %s", strerror(err));
 				return 1;
 			} else if (len == sizeof(recv_buffer)) {
-				print_log("read buffer overflow\n");
+				print_log("read buffer overflow");
 				continue;
 			}
-			// printf("received: %d byte from server %s\n", len, inet_ntoa(((sockaddr_in *) &in_addr)->sin_addr));
+			// printf("received: %d byte from server %s", len, inet_ntoa(((sockaddr_in *) &in_addr)->sin_addr));
 			now = std::chrono::system_clock::now();
 			long milisecs2 = std::chrono::duration_cast<std::chrono::milliseconds>(now.time_since_epoch()).count();
 			packet *recv_packet = reinterpret_cast<packet *> (&recv_buffer[0]);
@@ -107,14 +107,14 @@ int client_lib::run_test(char const* server) {
 			rtt[position] = milisecs2 - *recv_milisec;
 			long server_time = *recv_server_milisec - (rtt[position] / 2);
 			clock_desync[position] = *recv_milisec - server_time;
-			// printf("rtt: %d clock desync: %d\n", rtt[position], clock_desync[position]);
+			// printf("rtt: %d clock desync: %d", rtt[position], clock_desync[position]);
 			++position;
 			std::this_thread::sleep_for(std::chrono::milliseconds(250));
 		}
 
 		av_desync = mediana(clock_desync);
 		av_rtt = mediana(rtt);
-		print_log("\nAverage RTT: %d ms\nAverage clock out of synchronization: %d ms\n", av_rtt, av_desync );
+		print_log("Average RTT: %d ms\nAverage clock out of synchronization: %d ms", av_rtt, av_desync );
 	}
 
 
@@ -132,7 +132,7 @@ int client_lib::run_test(char const* server) {
 
 	// 1.5 Upload MBits test
 	{
-		print_log("\nmeasure 1.5 Upload MBits test\n");
+		print_log("Measuring 1.5 Upload MBits test...");
 		packet out;
 		int delivery_time[MAX_REPORTS];
 		NEGATIVE_RESET(delivery_time);
@@ -153,8 +153,8 @@ int client_lib::run_test(char const* server) {
 			long time_stamp_ms = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now().time_since_epoch()).count();
 			time_stamp_ms += av_desync;
 			payload->_set_start_time_stamp = time_stamp_ms;
-			//printf("send %d packest by %lu size\n", packets, sizeof(packet));
-			print_log(".");
+			//printf("send %d packest by %lu size", packets, sizeof(packet));
+			//print_log(".");
 			for(int num_packet = 0; num_packet<packets; ++num_packet) {
 				payload->_seqence_number = global_seqence_count++;
 				::sendto(sock, &out, sizeof(packet), 0, (struct sockaddr *) &server_address, sizeof(sockaddr_in));
@@ -173,20 +173,20 @@ int client_lib::run_test(char const* server) {
 				if (len == -1) {
 					int err = errno;
 					if (err != ETIMEDOUT && err != EAGAIN) {
-						print_log("could not read stat packet %s\n", strerror(err));
+						print_log("could not read stat packet %s", strerror(err));
 						return 1;
 					}
 					break;
 				} else if (len == sizeof(recv_buffer)) {
-					print_log("read buffer overflow\n");
+					print_log("read buffer overflow");
 					return 1;
 				} else {
-					//printf("received: %d byte from server %s\n", len, inet_ntoa(((sockaddr_in *) &in_addr)->sin_addr));
+					//printf("received: %d byte from server %s", len, inet_ntoa(((sockaddr_in *) &in_addr)->sin_addr));
 					packet *recv_packet = reinterpret_cast<packet *> (&recv_buffer[0]);
 					if (recv_packet->_type == ELoadStatistics) {
 						packet *recv_packet = reinterpret_cast<packet *> (&recv_buffer[0]);
 						statistics_payload *recv_stats = reinterpret_cast<statistics_payload *> (recv_packet->_payload);
-						//printf("ELoadStatistics: count: %d  delivery time: %d ms\n", recv_stats->_packets_count, recv_stats->_delivery_time);
+						//printf("ELoadStatistics: count: %d  delivery time: %d ms", recv_stats->_packets_count, recv_stats->_delivery_time);
 						assert(received_reports<MAX_REPORTS);
 						delivery_time[received_reports] = recv_stats->_delivery_time;
 						packet_lost[received_reports] = recv_stats->_packet_lost;
@@ -201,9 +201,9 @@ int client_lib::run_test(char const* server) {
 	}
 
 	if(received_reports==0)
-		print_log("\nStat server not responce\n");
+		print_log("Stat server not responce");
 	else
-		print_log("\nUpload %f MBits/sec average delivery time: %d ms, packet lost: %.2f%%\n", (float)load_bits/1000000, av_delivery, av_packet_lost/100.00);
+		print_log("Upload %f MBits/sec average delivery time: %d ms, packet lost: %.2f%%", (float)load_bits/1000000, av_delivery, av_packet_lost/100.00);
 
 	return 0;
 

@@ -3,8 +3,8 @@
 
 
 void to_print(char const* str) {
-	printf("%s", str);
-	fflush(stdout);
+	printf("%s\n", str);
+//	fflush(stdout);
 }
 
 int main(int argc, char *argv[]) {
