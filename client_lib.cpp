@@ -60,7 +60,7 @@ int client_lib::run_test(char const* server) {
 
 	// measure RTT without load and clock desync
 	{
-		print_log("Measuring RTT (without load) and clock desync ...");
+		print_log("Measuring RTT ...");
 		packet out;
 		out._type = ETimeSync;
 		int rtt[RTT_MAX_ATTEMPTS];
@@ -102,12 +102,13 @@ int client_lib::run_test(char const* server) {
 			now = std::chrono::system_clock::now();
 			long milisecs2 = std::chrono::duration_cast<std::chrono::milliseconds>(now.time_since_epoch()).count();
 			packet *recv_packet = reinterpret_cast<packet *> (&recv_buffer[0]);
-			long *recv_milisec = reinterpret_cast<long *> (recv_packet->_payload);
-			long *recv_server_milisec = reinterpret_cast<long *> (recv_packet->_payload + sizeof(long));
-			rtt[position] = milisecs2 - *recv_milisec;
-			long server_time = *recv_server_milisec - (rtt[position] / 2);
-			clock_desync[position] = *recv_milisec - server_time;
-			// printf("rtt: %d clock desync: %d", rtt[position], clock_desync[position]);
+			time_sync_payload *recv_payload = reinterpret_cast<time_sync_payload *> (recv_packet->_payload);
+			long recv_server_milisec = recv_payload->_server_time_stamp;
+			long recv_client_start_milisec = recv_payload->_client_time_stamp;
+			rtt[position] = milisecs2 - recv_client_start_milisec;
+			long approx_server_time = milisecs2 - (rtt[position] / 2);
+			clock_desync[position] = recv_server_milisec - approx_server_time;
+			//print_log("rtt: %d clock desync: %d", rtt[position], clock_desync[position]);
 			++position;
 			std::this_thread::sleep_for(std::chrono::milliseconds(250));
 		}
@@ -132,7 +133,7 @@ int client_lib::run_test(char const* server) {
 
 	// 1.5 Upload MBits test
 	{
-		print_log("Measuring 1.5 Upload MBits test...");
+		print_log("1.5 MBits upload  - Measuring packet lost and latency ...");
 		packet out;
 		int delivery_time[MAX_REPORTS];
 		NEGATIVE_RESET(delivery_time);
@@ -203,7 +204,7 @@ int client_lib::run_test(char const* server) {
 	if(received_reports==0)
 		print_log("Stat server not responce");
 	else
-		print_log("Upload %f MBits/sec average delivery time: %d ms, packet lost: %.2f%%", (float)load_bits/1000000, av_delivery, av_packet_lost/100.00);
+		print_log("Upload %f MBits/sec average latency: %d ms, packet lost: %.2f%%", (float)load_bits/1000000, av_delivery, av_packet_lost/100.00);
 
 	return 0;
 
