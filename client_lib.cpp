@@ -39,6 +39,8 @@ int client_lib::run_test(char const* server) {
 	server_address.sin_addr.s_addr = inet_addr (server);
 
 
+	print_log("UDP Speed Test 1.0");
+
 	int sock;
 	if ((sock = socket(PF_INET, SOCK_DGRAM, 0)) < 0) {
 		print_log("could not create socket");

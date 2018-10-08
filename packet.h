@@ -16,7 +16,7 @@ const int SERVER_PORT = 3010;
 #define REPORT_STATISTICS_FOR_PACKETS 100
 
 // How many ETimeSync packets will be send to measure RTT / and clock synchronization
-#define RTT_MAX_ATTEMPTS 8
+#define RTT_MAX_ATTEMPTS 16
 
 // how much packets will be send per second
 int const packets_per_seconds = 4;
