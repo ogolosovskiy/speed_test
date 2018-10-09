@@ -50,7 +50,7 @@ int client_lib::run_test(char const* server) {
 	sockaddr* server_addr = res0->ai_addr;
 	socklen_t server_addr_len = res0->ai_addrlen;
 
-	print_log("UDP Speed Test 1.0");
+	print_log("UDP Speed Test 1.1");
 
 	int sock;
 	if ((sock = socket(PF_INET, SOCK_DGRAM, 0)) < 0) {
