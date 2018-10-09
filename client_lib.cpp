@@ -3,6 +3,9 @@
 //
 
 #include "client_lib.h"
+#include <sys/types.h>
+#include <sys/socket.h>
+#include <netdb.h>
 
 to_print_callback* g_logger = 0;
 
@@ -31,13 +34,21 @@ client_lib::client_lib(to_print_callback* log)
 
 int client_lib::run_test(char const* server) {
 
-	struct sockaddr_in server_address;
-	memset(&server_address, 0, sizeof(server_address));
-	server_address.sin_family = AF_INET;
-	server_address.sin_port = htons(SERVER_PORT);
-	//server_address.sin_addr.s_addr = htonl(INADDR_ANY);
-	server_address.sin_addr.s_addr = inet_addr (server);
 
+	struct addrinfo hints, *res0 = nullptr;
+	memset(&hints, 0, sizeof(hints));
+	hints.ai_family = PF_UNSPEC;
+	hints.ai_socktype = SOCK_DGRAM;
+	hints.ai_protocol = IPPROTO_UDP;
+	hints.ai_flags = AI_PASSIVE;
+
+	int error = getaddrinfo(server, std::to_string(SERVER_PORT).c_str(), &hints, &res0);
+	if (error) {
+		print_log("find_interface: syscall getaddrinfo failed: %s(%d) %s\n", strerror(error), error, server);
+		return error;
+	}
+	sockaddr* server_addr = res0->ai_addr;
+	socklen_t server_addr_len = res0->ai_addrlen;
 
 	print_log("UDP Speed Test 1.0");
 
@@ -78,7 +89,7 @@ int client_lib::run_test(char const* server) {
 			now = std::chrono::system_clock::now();
 			time_sync_payload* payload = reinterpret_cast<time_sync_payload*>(&out._payload[0]);
 			payload->_client_time_stamp = std::chrono::duration_cast<std::chrono::milliseconds>(now.time_since_epoch()).count();
-			::sendto(sock, &out, sizeof(packet), 0, (struct sockaddr *) &server_address, sizeof(sockaddr_in));
+			::sendto(sock, &out, sizeof(packet), 0, server_addr, server_addr_len);
 
 			char recv_buffer[2048];
 			sockaddr_storage in_addr;
@@ -160,7 +171,7 @@ int client_lib::run_test(char const* server) {
 			//print_log(".");
 			for(int num_packet = 0; num_packet<packets; ++num_packet) {
 				payload->_seqence_number = global_seqence_count++;
-				::sendto(sock, &out, sizeof(packet), 0, (struct sockaddr *) &server_address, sizeof(sockaddr_in));
+				::sendto(sock, &out, sizeof(packet), 0, server_addr, server_addr_len);
 			}
 
 			std::this_thread::sleep_for(std::chrono::milliseconds(1000/packets_per_seconds));
