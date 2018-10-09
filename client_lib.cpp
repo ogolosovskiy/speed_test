@@ -53,7 +53,7 @@ int client_lib::run_test(char const* server) {
 	print_log("UDP Speed Test 1.1");
 
 	int sock;
-	if ((sock = socket(PF_INET, SOCK_DGRAM, 0)) < 0) {
+	if ((sock = socket(server_addr->sa_family, SOCK_DGRAM, 0)) < 0) {
 		print_log("could not create socket");
 		return -1;
 	}
