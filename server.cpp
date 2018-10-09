@@ -14,16 +14,18 @@
 #include <unistd.h>
 #include <assert.h>
 #include <map>
+#include <inttypes.h>
+
 
 struct series_info {
-	long _min_sequence;
-	long _max_sequence;
+	int32_t _min_sequence;
+	int32_t _max_sequence;
 };
 
 struct client_statistics {
-	int _stat_delivery_time[LOAD_SERIES][REPORT_STATISTICS_FOR_PACKETS];
+	int32_t _stat_delivery_time[LOAD_SERIES][REPORT_STATISTICS_FOR_PACKETS];
 	series_info _stat_delivery_info;
-	int _stat_packets_count;
+	int32_t _stat_packets_count;
 
 	client_statistics() {
 		clear();
@@ -84,9 +86,11 @@ void calculate_statistics(load_payload* payload, statistics_payload* st, long ci
 		assert(payload->_load_set_count < LOAD_SERIES);
 		int av_delivery = mediana(stat._stat_delivery_time[payload->_load_set_count]);
 		printf(" delivery time %d\n", av_delivery);
-		long sent_packets = stat._stat_delivery_info._max_sequence - stat._stat_delivery_info._min_sequence + 1;
+		int32_t sent_packets = stat._stat_delivery_info._max_sequence - stat._stat_delivery_info._min_sequence + 1;
 		float packet_lost = 100.0 - 100.0 * (float) REPORT_STATISTICS_FOR_PACKETS / (float) sent_packets;
-		printf(" packet loss %f (sent:%ld %ld-%ld, received: %d)\n",
+
+
+		printf(" packet loss %f (sent:%" PRId32 " %" PRId32 "-%" PRId32 ", received: %d)\n",
 			   packet_lost,
 			   sent_packets,
 			   stat._stat_delivery_info._min_sequence,

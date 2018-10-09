@@ -48,10 +48,10 @@ enum test_type {
 const int PAYLOAD_SIZE = 1000;
 
 struct packet {
-	int _version;
-	test_type _type;
-	int _test_id;
-	char _payload[PAYLOAD_SIZE];
+	int16_t _version;
+	int16_t _type;
+	int16_t _test_id;
+	int8_t _payload[PAYLOAD_SIZE];
 	packet() {
 		clear();
 	}
@@ -61,7 +61,7 @@ struct packet {
 		_version = 1;
 		std::random_device rd;  //Will be used to obtain a seed for the random number engine
 		std::mt19937 gen(rd()); //Standard mersenne_twister_engine seeded with rd()
-		std::uniform_int_distribution<> uid(0, std::numeric_limits<int>::max());
+		std::uniform_int_distribution<> uid(0, std::numeric_limits<int16_t>::max());
 		_test_id = uid(gen);
 
 	}
@@ -69,32 +69,32 @@ struct packet {
 
 // ELoad payload
 struct load_payload {
-	long _set_start_time_stamp;
-	long _seqence_number;
-	long _load_set_count;
-	long _load_set_packets;
+	int32_t _set_start_time_stamp;
+	int32_t _seqence_number;
+	int32_t _load_set_count;
+	int32_t _load_set_packets;
 };
 
 // ETimeSync payload
 struct time_sync_payload {
-	long _client_time_stamp;
-	long _server_time_stamp;
+	int32_t _client_time_stamp;
+	int32_t _server_time_stamp;
 };
 
 struct statistics_payload {
-	int _packets_count;
-	int _delivery_time; // ms
-	int _packet_lost; // percents * 100
+	int32_t _packets_count;
+	int32_t _delivery_time; // ms
+	int32_t _packet_lost; // percents * 100
 };
 
-inline void set_min(long& old_val, long& new_val) {
+inline void set_min(int32_t& old_val, int32_t& new_val) {
 	if(old_val == -1)
 		old_val = new_val;
 	else
 		old_val = std::min(old_val, new_val);
 }
 
-inline void set_max(long& old_val, long& new_val) {
+inline void set_max(int32_t& old_val, int32_t& new_val) {
 	if(old_val == -1)
 		old_val = new_val;
 	else
