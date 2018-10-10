@@ -68,9 +68,6 @@ int update_statistics(load_payload* payload, long cid)
 	assert(stat._stat_delivery_info._min_sequence != -1);
 	assert(stat._stat_delivery_info._max_sequence != -1);
 
-	//printf("debug min %ld max %ld packet_sequenc %ld \n", stat_delivery_info._min_sequence, stat_delivery_info._max_sequence, payload->_seqence_number);
-	assert(stat._stat_delivery_info._max_sequence - stat._stat_delivery_info._min_sequence < REPORT_STATISTICS_FOR_PACKETS);
-
 	stat._stat_packets_count++;
 
 	return stat._stat_packets_count;
